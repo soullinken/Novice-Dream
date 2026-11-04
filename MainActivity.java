@@ -5,12 +5,17 @@ import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
+    private static final String ONLINE_URL = "https://soullinken.github.io/Novice-Dream/";
+    private static final String OFFLINE_URL = "file:///android_asset/index.html";
     private WebView webView;
+    private boolean usingOffline = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,7 +25,15 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         webView.setBackgroundColor(0xFF000000);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        webView.setWebViewClient(new WebViewClient());
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                if (request.isForMainFrame() && !usingOffline) {
+                    usingOffline = true;
+                    view.loadUrl(OFFLINE_URL);
+                }
+            }
+        });
         webView.setWebChromeClient(new WebChromeClient());
 
         WebSettings settings = webView.getSettings();
@@ -29,13 +42,14 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
+        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
 
         setContentView(webView);
-        webView.loadUrl("file:///android_asset/index.html");
+        webView.loadUrl(ONLINE_URL);
     }
 
     private void hideSystemBars() {

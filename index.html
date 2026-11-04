@@ -144,12 +144,14 @@ input{width:100%;font-weight:400}
  <div style="width:min(440px,96vw);background:#1d1640;border:1px solid #3a2f6b;border-radius:10px;padding:16px;max-height:96vh;overflow:auto">
   <h2 style="color:#ffd978;margin:0 0 6px">Novice Dream</h2>
   <p class="muted" style="margin:0 0 8px">Semua petualang memulai sebagai Novice Lv 1. Kelas pertama dipilih di Lv 10 lewat Ujian Mimpi, kelas kedua di Lv 40, kelas lanjutan di Lv 70. Toko terbuka di Lv 5. Kamu dibekali <b class="gold">Knife Lv 1</b> dan Novice Hat, Armor &amp; Shoes Lv 1. Level maksimum: 100.</p>
+  <div id="slots" style="display:flex;flex-direction:column;gap:6px;margin:6px 0 10px"></div>
   <input id="nName" maxlength="14" placeholder="Nama petualang" style="margin:4px 0 8px">
-  <div style="display:flex;gap:8px;margin-bottom:8px"><button id="gM" class="pri" style="flex:1">♂ Laki-laki</button><button id="gF" style="flex:1">♀ Perempuan</button></div>
+  <div id="gRow" style="display:flex;gap:8px;margin-bottom:8px"><button id="gM" class="pri" style="flex:1">♂ Laki-laki</button><button id="gF" style="flex:1">♀ Perempuan</button></div>
   <button id="bLang0" class="langbtn" style="width:100%;margin-bottom:6px"></button>
   <button id="bMus0" class="on" style="width:100%;margin-bottom:6px">🔊 Musik: ON</button>
   <button id="bStart" class="pri" style="width:100%">Mulai Petualangan</button>
   <button id="bCont" style="width:100%;margin-top:6px;display:none">Lanjutkan Save</button>
+  <button id="bDel" style="width:100%;margin-top:6px;display:none;border-color:#b55">Hapus Karakter Slot Ini</button>
   <div class="muted" style="margin-top:10px;text-align:center;font-size:12px">Pemilik: <b class="gold">Eduwar S</b></div>
  </div>
 </div>
@@ -1141,7 +1143,7 @@ function sysPanel(){
  h+='<b>Otomatis</b><div class="row"><span>Auto skill</span><button data-a="tAutoSk" class="'+(S.autoSk?'on':'')+'">'+(S.autoSk?'ON':'OFF')+'</button></div><div class="row"><span>Auto potion</span><button data-a="tAutoPot" class="'+(S.autoPot?'on':'')+'">'+(S.autoPot?'ON':'OFF')+'</button></div>';
  h+='<div class="row"><span>Health Potion saat ≤</span><select id="selHp">'+[20,30,40,50,60,70].map(function(v){return'<option value="'+v+'"'+(v===S.potPct?' selected':'')+'>'+v+'%</option>'}).join('')+'</select></div>';
  h+='<div class="row"><span>Mana Potion saat ≤</span><select id="selMp">'+[10,20,25,30,40,50].map(function(v){return'<option value="'+v+'"'+(v===S.mpPct?' selected':'')+'>'+v+'%</option>'}).join('')+'</select></div>';
- h+='<b>Musik</b><div class="row"><span>Musik latar</span><button data-a="tMus" class="'+(S.mus!==false?'on':'')+'">'+(S.mus!==false?'ON':'OFF')+'</button></div><div class="row"><span>Volume musik</span><select id="selMus">'+[50,100,150,200].map(function(v){return'<option value="'+v+'"'+(v===(S.musVol==null?100:S.musVol)?' selected':'')+'>'+v+'%</option>'}).join('')+'</select></div><div class="row"><span>Efek suara (serangan)</span><button data-a="tSfx" class="'+(S.sfx!==false?'on':'')+'">'+(S.sfx!==false?'ON':'OFF')+'</button></div><b>Tentang</b><div class="note">Novice Dream · Pemilik: <b class="gold">Eduwar S</b></div><b>Layar</b><div class="row"><span>Layar penuh</span><button data-a="full">Layar penuh</button></div><small class="muted">Keyboard: WASD/panah gerak · Spasi attack · 1-9 slot skill · F auto battle · Q auto quest · E bicara · R rest · M menu. Tap peta untuk berjalan (diabaikan saat Auto/Auto Quest menyala; auto hanya mati lewat tombolnya atau F/Q).</small><b>Data</b><div class="row"><button data-a="save">Simpan</button><button data-a="backup">Backup</button><button data-a="restore">Restore</button><button data-a="reset" style="border-color:#b55">Reset</button></div><textarea id="bk" placeholder="Kode backup muncul di sini. Tempel kode lalu tekan Restore."></textarea>';
+ h+='<b>Musik</b><div class="row"><span>Musik latar</span><button data-a="tMus" class="'+(S.mus!==false?'on':'')+'">'+(S.mus!==false?'ON':'OFF')+'</button></div><div class="row"><span>Volume musik</span><select id="selMus">'+[50,100,150,200].map(function(v){return'<option value="'+v+'"'+(v===(S.musVol==null?100:S.musVol)?' selected':'')+'>'+v+'%</option>'}).join('')+'</select></div><div class="row"><span>Efek suara (serangan)</span><button data-a="tSfx" class="'+(S.sfx!==false?'on':'')+'">'+(S.sfx!==false?'ON':'OFF')+'</button></div><b>Tentang</b><div class="note">Novice Dream · Pemilik: <b class="gold">Eduwar S</b></div><b>Layar</b><div class="row"><span>Layar penuh</span><button data-a="full">Layar penuh</button></div><small class="muted">Keyboard: WASD/panah gerak · Spasi attack · 1-9 slot skill · F auto battle · Q auto quest · E bicara · R rest · M menu. Tap peta untuk berjalan (diabaikan saat Auto/Auto Quest menyala; auto hanya mati lewat tombolnya atau F/Q).</small><b>Data</b><div class="row"><button data-a="save">Simpan</button><button data-a="backup">Backup</button><button data-a="restore">Restore</button><button data-a="switch">Ganti Karakter</button><button data-a="reset" style="border-color:#b55">Reset</button></div><textarea id="bk" placeholder="Kode backup muncul di sini. Tempel kode lalu tekan Restore."></textarea>';
  return h}
 function renderTab(){renderTab0();if(tab==='char'&&chT==='equip')eqDraw()}
 function renderTab0(){var el=$('tab'),sc=el.scrollTop;if(tab!==lastTab){sc=0;lastTab=tab}el.innerHTML=tab==='quest'?qPanel():tab==='char'?charPanel():tab==='bag'?bagPanel():tab==='hub'?hubPanel():sysPanel();el.scrollTop=sc;
@@ -1177,7 +1179,8 @@ function act(a,v){if(hubAct(a,v))return;if(S.lv<5&&['buy','buy10','buyg','sell',
  else if(a==='save'){save();log('Game disimpan.')}
  else if(a==='backup'){$('bk').value=JSON.stringify(S);$('bk').select();log('Kode backup dibuat. Salin dan simpan di tempat aman.')}
  else if(a==='restore'){var d=loadRaw($('bk').value);if(d){S=d;nmSync();fixBag();setMap(S.map);log('Backup dipulihkan.');save()}else log('Kode backup tidak valid.')}
- else if(a==='reset'){if(confirm('Hapus semua progres Novice Dream?')){try{localStorage.removeItem(SAVE_KEY)}catch(e){}location.reload()}}
+ else if(a==='switch'){if(confirm('Simpan dan kembali ke pilihan karakter?')){save();location.reload()}}
+ else if(a==='reset'){if(confirm('Hapus karakter di slot ini? Tidak bisa dibatalkan.')){try{localStorage.removeItem(SAVE_KEY)}catch(e){}location.reload()}}
  renderTab();updateHud()}
 
 
@@ -1472,8 +1475,15 @@ var SFX=(function(){
 /* ---------- START ---------- */
 function nmSync(){if(window.__ndSetName)window.__ndSetName(S&&S.name?String(S.name):'')}
 var gender='L',saved=null;
-try{saved=loadRaw(localStorage.getItem(SAVE_KEY))}catch(e){}
-if(saved){$('bCont').style.display='block';$('nName').value=saved.name}
+var SLOT=1,NSLOT=4;
+function slotKey(i){return i===1?'novicedream-v4c-save':'novicedream-v4c-save-'+i}
+function slotData(i){try{return loadRaw(localStorage.getItem(slotKey(i)))}catch(e){return null}}
+function renderSlots(){var box=$('slots');box.innerHTML='';for(var i=1;i<=NSLOT;i++){(function(i){var d=slotData(i),b=document.createElement('button');b.style.width='100%';b.style.textAlign='left';b.className=i===SLOT?'pri':'';b.textContent=d?('Slot '+i+' · '+d.name+' · '+(JNAME[d.job]||'Novice')+' Lv '+d.lv):('Slot '+i+' · Kosong');b.onclick=function(){selSlot(i)};box.appendChild(b)})(i)}}
+function selSlot(i){SLOT=i;SAVE_KEY=slotKey(i);saved=slotData(i);try{localStorage.setItem('novicedream-slot',String(i))}catch(e){}
+ var has=!!saved;$('nName').style.display=has?'none':'';$('gRow').style.display=has?'none':'flex';$('bStart').style.display=has?'none':'block';$('bCont').style.display=has?'block':'none';$('bDel').style.display=has?'block':'none';
+ $('nName').value=has?saved.name:'';$('bStart').textContent='Mulai Petualangan (Slot '+i+')';$('bCont').textContent='Lanjutkan Slot '+i;renderSlots()}
+(function(){var st=1;try{st=parseInt(localStorage.getItem('novicedream-slot'),10)||1}catch(e){}if(st<1||st>NSLOT)st=1;selSlot(st)})();
+$('bDel').onclick=function(){if(confirm('Hapus karakter di Slot '+SLOT+'? Tidak bisa dibatalkan.')){try{localStorage.removeItem(slotKey(SLOT))}catch(e){}selSlot(SLOT)}};
 var lgMus=null;
 function lgOn(){return lgMus!==null?lgMus:!(saved&&saved.mus===false)}
 function musPref(){var o=lgOn(),b=$('bMus0');MUS.set(o,(saved&&saved.musVol!=null?saved.musVol:100)/100);b.className=o?'on':'';b.style.width='100%';b.style.marginBottom='6px';b.textContent=o?'🔊 Musik: ON':'🔇 Musik: OFF'}
