@@ -320,8 +320,8 @@ function migPot(o){o=(o&&typeof o==='object')?o:{};var m=function(a,b){if(o[a]){
 
 /* ---------- PERLENGKAPAN ---------- */
 function tiers(a,step,max){var r=[];for(var l=a;l<=max;l+=step)r.push(l);return r}
-var TW=tiers(1,10,100),TH=tiers(3,10,100),TA=tiers(5,10,100),TB=tiers(7,10,100),TN=[1,30,50,80];
-var FAMS={knife:{s:'wpn',n:'Knife',t:TN},sword:{s:'wpn',n:'Sword',t:TW},bow:{s:'wpn',n:'Bow',t:TW},staff:{s:'wpn',n:'Staff',t:TW},shield:{s:'sh',n:'Shield',t:TW},arrow:{s:'sh',n:'Arrow',t:TW},book:{s:'sh',n:'Book',t:TW},charm:{s:'sh',n:'Charm',t:TW},nhat:{s:'hel',n:'Novice Hat',t:TN},nshoes:{s:'boo',n:'Novice Shoes',t:TN},
+var TW=tiers(1,10,100),TP=tiers(10,10,100),TH=tiers(3,10,100),TA=tiers(5,10,100),TB=tiers(7,10,100),TN=[1,30,50,80];
+var FAMS={knife:{s:'wpn',n:'Knife',t:TN},sword:{s:'wpn',n:'Sword',t:TP},bow:{s:'wpn',n:'Bow',t:TP},staff:{s:'wpn',n:'Staff',t:TP},shield:{s:'sh',n:'Shield',t:TW},arrow:{s:'sh',n:'Arrow',t:TW},book:{s:'sh',n:'Book',t:TW},charm:{s:'sh',n:'Charm',t:TW},nhat:{s:'hel',n:'Novice Hat',t:TN},nshoes:{s:'boo',n:'Novice Shoes',t:TN},
  hhelm:{s:'hel',n:'Heavy Helmet',t:TH},lhelm:{s:'hel',n:'Light Helmet',t:TH},mhat:{s:'hel',n:'Magic Hat',t:TH},
  harmor:{s:'arm',n:'Heavy Armor',t:TA},larmor:{s:'arm',n:'Light Armor',t:TA},mcoat:{s:'arm',n:'Magic Robe',t:TA},narmor:{s:'arm',n:'Novice Armor',t:TN},
  hboots:{s:'boo',n:'Heavy Boots',t:TB},lboots:{s:'boo',n:'Light Boots',t:TB},mshoes:{s:'boo',n:'Magic Shoes',t:TB},wings:{s:'wg',n:'Bat Wings',t:TA}};
@@ -545,6 +545,9 @@ function loadRaw(txt){try{var d=JSON.parse(txt);if(!d||!d.lv||!d.name)return nul
  if(b.job==='healer')b.job='acolyte';if(!JOBS[b.job])b.job='novice';if((+d.v||0)<3){b.sk={};b.sp=Math.max(0,b.lv-1);b.jobPass=b.job==='novice'?!!d.jobPass:false;b.jobQ=null}else if(b.jobQ&&typeof b.jobQ.p!=='number')b.jobQ={p:0};if(!b.sk||typeof b.sk!=='object')b.sk={};
  if((+d.v||0)<4){var sp0=0;Object.keys(b.sk).forEach(function(id){var r=Math.min(SKMAX,Math.max(0,Math.floor(+b.sk[id]||0)));if(SKI[id]&&r>0)sp0+=SP_UNLOCK+(r-1)*SP_UP});b.sp=Math.max(0,spTotal(b.lv)-sp0)}
  if(!d.eq){var old=0,n;for(n=1;n<=(+d.wpn||0);n++)old+=80*n*n;for(n=1;n<=(+d.arm||0);n++)old+=70*n*n;b.gold=(+b.gold||0)+old}
+ function migW(id){if(typeof id!=='string')return id;var q=id.split('_');if((q[0]==='sword'||q[0]==='bow'||q[0]==='staff')&&q.length>=2){var L=+q[1];if(L>=1&&L<=100&&L%10!==0)q[1]=String(Math.max(10,Math.floor(L/10)*10));return q.join('_')}return id}
+ if(b.eq&&typeof b.eq==='object')Object.keys(b.eq).forEach(function(k){b.eq[k]=migW(b.eq[k])});
+ if(b.gear&&typeof b.gear==='object'){var ng={};Object.keys(b.gear).forEach(function(k){ng[migW(k)]=1});b.gear=ng}
  var sg=startGear(b.job),eq={};Object.keys(sg).forEach(function(sl){var g=gearDef((b.eq||{})[sl]);eq[sl]=(g&&g.s===sl&&JOBFAM[b.job][sl]===g.fam)?g.id:sg[sl]});if(b.eq&&b.eq.wg){var gw=gearDef(b.eq.wg);if(gw&&gw.s==='wg')eq.wg=gw.id}b.eq=eq;
  if(!b.gear||typeof b.gear!=='object')b.gear={};Object.keys(b.gear).forEach(function(id){if(!gearDef(id))delete b.gear[id]});delete b.wpn;delete b.arm;
  if(!b.mq||typeof b.mq!=='object')b.mq={i:0,ph:0,p:0};b.mq.i=clamp(Math.floor(+b.mq.i||0),0,MQ.length);b.mq.ph=b.mq.ph===1?1:0;b.mq.p=Math.max(0,Math.floor(+b.mq.p||0));
@@ -671,7 +674,7 @@ function qpos(slot){var qd=slot-2,xl=(qd%2)?W*.6:W*.08,xh=(qd%2)?W*.92:W*.4,yl=q
 function wbPos(){var hx,hy,tries=0;do{hx=rnd(40,W-40);hy=rnd(40,H-30);tries++}while(tries<80&&(inSafe(hx,hy,30)||npcNear(hx,hy)||obsAt(hx,hy,26)));return[hx,hy]}
 /* Boss (hp x8, atk x2.2) & World Boss (hp x25, atk x2.8): jauh lebih kuat dari monster normal; selalu agresif */
 function mkBigMon(slot,lv,d,wb,q){var b=monBase(lv),p=wb?wbPos():qpos(slot),mt=(wb?WBM:BOSSM)[Math.max(0,Math.min(9,S.map))],hp=Math.floor(b.hp*mt[0]);
- return{slot:slot,boss:q?q.boss:d[0],wb:!!wb,qb:!!q,fb:!wb&&!q,name:q?q.boss:d[0],kind:q?q.bk:d[1],col:q?q.bc:d[2],lv:lv,hp:hp,max:hp,atk:Math.max(1,Math.floor((5+lv*2.3)*mt[1])),sp:wb?44:40,ag:true,x:p[0],y:p[1],hx:p[0],hy:p[1],st:'idle',t:0,dir:1,cd:0,hurt:0,aggro:false,wt:0,tx:p[0],ty:p[1],slow:0,rs:0}}
+ return{slot:slot,boss:q?q.boss:d[0],wb:!!wb,qb:!!q,fb:!wb&&!q,name:q?q.boss:d[0],kind:q?q.bk:d[1],col:q?q.bc:d[2],lv:lv,hp:hp,max:hp,atk:Math.max(1,Math.floor((5+lv*2.3)*mt[1])),sp:wb?44:40,ag:false,x:p[0],y:p[1],hx:p[0],hy:p[1],st:'idle',t:0,dir:1,cd:0,hurt:0,aggro:false,wt:0,tx:p[0],ty:p[1],slow:0,rs:0}}
 function mkBoss(slot,q){return mkBigMon(slot,q.blv,null,false,q)}
 function hiddenMon(slot,sec){return{slot:slot,boss:null,wb:false,qb:false,fb:false,ag:false,name:'',kind:'slime',col:'#fff',lv:1,hp:0,max:1,atk:0,sp:0,x:-99,y:-99,hx:-99,hy:-99,st:'dead',t:9,dir:1,cd:0,hurt:0,aggro:false,wt:0,tx:0,ty:0,slow:0,rs:Math.max(.05,sec)}}
 function bossCd(slot){var t=(S.bcd&&S.bcd[S.map+'_'+slot])||0;return Math.max(0,t-clk())}
@@ -695,8 +698,8 @@ function mkMon(slot){
 function spawnAll(){mons=[];for(var i=0;i<64;i++)mons.push(mkMon(i))}
 function setMap(i){if(mons.length&&mons[1]&&mons[1].wb&&mons[1].st!=='dead'&&S.wbt&&S.wbt[S.map])S.wbt[S.map].h=mons[1].hp/mons[1].max;S.map=i;camFree=null;P.x=W/2;P.y=H/2;P.tx=null;P.talkTo=null;buildBg();spawnAll();updateHud()}
 function autoOn(){return S.auto||S.aq}
-function offLimit(m){return m.wb||(m.boss&&!m.qb&&S.lv<m.lv-3)}
-function nearBadBoss(m){if(m.boss)return false;for(var i=0;i<mons.length;i++){var b=mons[i];if(b.st!=='dead'&&offLimit(b)&&dist(b,m)<(b.wb?190:160))return true}return false}
+function offLimit(m){if(m.qb)return false;if(m.lv>S.lv+3)return true;if(m.wb)return !S.autoWB;if(m.boss)return !S.autoBoss;return false}
+function nearBadBoss(m){if(m.boss)return false;for(var i=0;i<mons.length;i++){var b=mons[i];if(b.st!=='dead'&&(b.boss||b.wb)&&offLimit(b)&&dist(b,m)<(b.wb?190:160))return true}return false}
 function nearestF(f){var b=null,bd=1e9;for(var i=0;i<mons.length;i++){var m=mons[i];if(m.st==='dead'||!f(m)||(autoOn()&&(offLimit(m)||nearBadBoss(m))))continue;var d=dist(P,m);if(d<bd){bd=d;b=m}}return b}
 function nearest(maxd){var b=null,bd=maxd||1e9;for(var i=0;i<mons.length;i++){var m=mons[i];if(m.st==='dead'||(autoOn()&&(offLimit(m)||nearBadBoss(m))))continue;var d=dist(P,m);if(d<bd){bd=d;b=m}}return b}
 
@@ -727,7 +730,7 @@ function playerAttack(){
  P.rest=false;P.dir=m.x>=P.x?1:-1;P.atkCd=.55/(1+pct('aspd')/100);setAtk();
  if(reach()>60)shot(P,m,JOBS[S.job].col);strike(m,atkRoll(),1.6,1,undefined,1);SFX.atk(JOBS[S.job].line,0);return true}
 function witchProc(){var w=SKI['mage.3.p'];if(!w||!ownsSk(w)||S.lv<w.lv||rank(w.id)<1||(P.wdCd||0)>0)return false;return Math.random()*100<3+.5*rank(w.id)}
-function pickT(r){var t=P.tgt;if((S.auto||S.aq)&&t&&t.st!=='dead'&&dist(P,t)<=r)return t;return nearest(r)}
+function pickT(r){var t=P.tgt;if((S.auto||S.aq)&&t&&t.st!=='dead'&&!offLimit(t)&&dist(P,t)<=r)return t;return nearest(r)}
 function castSkill(i,quiet){var id=S.slots[i];return id&&SKI[id]?castSk(SKI[id],quiet):false}
 function assignSlot(id,to){var sl=S.slots,from=sl.indexOf(id);if(to<0){if(from>=0)sl[from]=null;return}if(from===to)return;var other=sl[to];sl[to]=id;if(from>=0)sl[from]=other||null}
 function slotOpts(id){var h='<option value="-1">Slot: –</option>';for(var i=0;i<NSLOT;i++){var o=S.slots[i];h+='<option value="'+i+'"'+(o===id?' selected':'')+'>Slot '+(i+1)+(o&&o!==id&&SKI[o]?' · '+SKI[o].n:'')+'</option>'}return h}
@@ -818,9 +821,9 @@ function autoStep(dt,aqm,q){
  if(q&&q.type==='boss')want=function(x){return x.boss===q.boss};
  else if(q&&q.type==='kill'&&q.k)want=function(x){return x.kind===q.k};
  var t=P.tgt;
- if(t&&t.st!=='dead'&&mons.indexOf(t)>=0&&(!want||want(t)))m=t;
+ if(t&&t.st!=='dead'&&mons.indexOf(t)>=0&&!offLimit(t)&&(!want||want(t)))m=t;
  else{P.tgt=null;if(want)m=nearestF(want);else m=nearest(1e9);if(m)P.tgt=m;else if(want)m=nearest(1e9)}
- var ak=null,akd=70;for(var ai=0;ai<mons.length;ai++){var ax=mons[ai];if(ax.st==='dead'||ax.wb||!ax.aggro)continue;var ad=dist(P,ax);if(ad<akd){akd=ad;ak=ax}}
+ var ak=null,akd=70;for(var ai=0;ai<mons.length;ai++){var ax=mons[ai];if(ax.st==='dead'||ax.wb||!ax.aggro||offLimit(ax))continue;var ad=dist(P,ax);if(ad<akd){akd=ad;ak=ax}}
  if(ak&&m!==ak&&(!q||q.type!=='boss')&&!(m&&m.aggro&&dist(P,m)<=70)){m=ak;P.tgt=ak}
  if(!m){if(!aNone){aNone=true;aTgK='';dlog('Tidak ada target')}return false}
  aNone=false;var tk=m.slot+':'+m.name+':'+m.lv;if(tk!==aTgK){aTgK=tk;dlog('Target: '+m.name+' Lv '+m.lv+(m.wb?' [World Boss]':m.boss?' [Boss]':'')+' · jarak '+Math.round(dist(P,m)))}
@@ -1140,7 +1143,7 @@ function petPanel(){var h='<b>Pet</b> <small class="muted">Lv '+S.lv+'/'+LVMAX+'
 function sysPanel(){
  var h='<b>Language</b><div class="row"><span>Bahasa / Language</span><button class="langbtn" data-a="lang">'+(window.__ndLang()==='en'?'🌐 Bahasa Indonesia':'🌐 English')+'</button></div><b>Map</b><div class="row"><span>Pilih area</span><select id="selMap">'+MAPS.map(function(m,i){return'<option value="'+i+'" '+(i===S.map?'selected':'')+(S.lv<m.min?' disabled':'')+'>'+(i+1)+'. '+m.n+' (Lv '+m.min+'-'+m.max+')</option>'}).join('')+'</select></div>';
  var pt2=Math.floor(S.playT||0);h+='<b>Waktu</b><div class="row"><span>Waktu bermain</span><span>'+Math.floor(pt2/3600)+' j '+Math.floor(pt2%3600/60)+' m</span></div><div class="row"><span>Siklus</span><small>1 jam siang, 1 jam malam (mengikuti lama bermain)</small></div>';
- h+='<b>Otomatis</b><div class="row"><span>Auto skill</span><button data-a="tAutoSk" class="'+(S.autoSk?'on':'')+'">'+(S.autoSk?'ON':'OFF')+'</button></div><div class="row"><span>Auto potion</span><button data-a="tAutoPot" class="'+(S.autoPot?'on':'')+'">'+(S.autoPot?'ON':'OFF')+'</button></div>';
+ h+='<b>Otomatis</b><div class="row"><span>Auto skill</span><button data-a="tAutoSk" class="'+(S.autoSk?'on':'')+'">'+(S.autoSk?'ON':'OFF')+'</button></div><div class="row"><span>Auto potion</span><button data-a="tAutoPot" class="'+(S.autoPot?'on':'')+'">'+(S.autoPot?'ON':'OFF')+'</button></div><div class="row"><span>Auto serang Boss</span><button data-a="tAutoBoss" class="'+(S.autoBoss?'on':'')+'">'+(S.autoBoss?'ON':'OFF')+'</button></div><div class="row"><span>Auto serang World Boss</span><button data-a="tAutoWB" class="'+(S.autoWB?'on':'')+'">'+(S.autoWB?'ON':'OFF')+'</button></div><p class="muted">Auto Battle hanya menyerang monster maks. 3 level di atas levelmu.</p>';
  h+='<div class="row"><span>Health Potion saat ≤</span><select id="selHp">'+[20,30,40,50,60,70].map(function(v){return'<option value="'+v+'"'+(v===S.potPct?' selected':'')+'>'+v+'%</option>'}).join('')+'</select></div>';
  h+='<div class="row"><span>Mana Potion saat ≤</span><select id="selMp">'+[10,20,25,30,40,50].map(function(v){return'<option value="'+v+'"'+(v===S.mpPct?' selected':'')+'>'+v+'%</option>'}).join('')+'</select></div>';
  h+='<b>Musik</b><div class="row"><span>Musik latar</span><button data-a="tMus" class="'+(S.mus!==false?'on':'')+'">'+(S.mus!==false?'ON':'OFF')+'</button></div><div class="row"><span>Volume musik</span><select id="selMus">'+[50,100,150,200].map(function(v){return'<option value="'+v+'"'+(v===(S.musVol==null?100:S.musVol)?' selected':'')+'>'+v+'%</option>'}).join('')+'</select></div><div class="row"><span>Efek suara (serangan)</span><button data-a="tSfx" class="'+(S.sfx!==false?'on':'')+'">'+(S.sfx!==false?'ON':'OFF')+'</button></div><b>Tentang</b><div class="note">Novice Dream · Pemilik: <b class="gold">Eduwar S</b></div><b>Layar</b><div class="row"><span>Layar penuh</span><button data-a="full">Layar penuh</button></div><small class="muted">Keyboard: WASD/panah gerak · Spasi attack · 1-9 slot skill · F auto battle · Q auto quest · E bicara · R rest · M menu. Tap peta untuk berjalan (diabaikan saat Auto/Auto Quest menyala; auto hanya mati lewat tombolnya atau F/Q).</small><b>Data</b><div class="row"><button data-a="save">Simpan</button><button data-a="backup">Backup</button><button data-a="restore">Restore</button><button data-a="switch">Ganti Karakter</button><button data-a="reset" style="border-color:#b55">Reset</button></div><textarea id="bk" placeholder="Kode backup muncul di sini. Tempel kode lalu tekan Restore."></textarea>';
@@ -1174,7 +1177,7 @@ function act(a,v){if(hubAct(a,v))return;if(S.lv<5&&['buy','buy10','buyg','sell',
  else if(a==='tAQB'){S.aqB=!S.aqB}
  else if(a==='qgo'){goQuest()}
  else if(a==='pet'){S.pet=!S.pet}else if(a==='petevo'){var et=petTier(v);if(PETS[v]&&petOwned(v)&&et<3&&S.lv>=EVO_LV[et]){if(!S.petEvo)S.petEvo={};S.petEvo[v]=et+1;log(PETS[v].n+' berevolusi ke tahap '+(et+1)+'!')}}else if(a==='petbuy'){if(S.lv<PET_MINLV){log('Pet terkunci sampai Lv '+PET_MINLV+'.')}else if(v==='peri'&&!petOwned('peri')&&S.gold>=PET_PRICE){S.gold-=PET_PRICE;S.petOwn.peri=1;S.petType='peri';S.pet=true;log('Membeli Peri Malam!')}else if(!petOwned('peri'))log('Gold tidak cukup.')}else if(a==='petsel'){if(PETS[v]&&petOwned(v)&&S.lv>=PET_MINLV){S.petType=v;S.pet=true;if(S.lv<PET_MINLV)log('Pet baru aktif di Lv '+PET_MINLV+'.')}}
- else if(a==='tMus'){S.mus=S.mus===false;musApply()}else if(a==='tSfx'){S.sfx=S.sfx===false}else if(a==='tAutoSk'){S.autoSk=!S.autoSk}else if(a==='tAutoPot'){S.autoPot=!S.autoPot}
+ else if(a==='tMus'){S.mus=S.mus===false;musApply()}else if(a==='tSfx'){S.sfx=S.sfx===false}else if(a==='tAutoSk'){S.autoSk=!S.autoSk}else if(a==='tAutoPot'){S.autoPot=!S.autoPot}else if(a==='tAutoBoss'){S.autoBoss=!S.autoBoss}else if(a==='tAutoWB'){S.autoWB=!S.autoWB}
  else if(a==='full'){toggleFull()}
  else if(a==='save'){save();log('Game disimpan.')}
  else if(a==='backup'){window.__bkCode=JSON.stringify(S);log('Kode backup dibuat. Salin dan simpan di tempat aman.')}
@@ -1328,7 +1331,7 @@ function miniDraw(){var w=120,h=68,x0=CW-w-8,y0=8,sx=w/W,sy=h/H;ctx.save();ctx.s
  OBS.forEach(function(b){dot(b.x,b.y,'#9a9aa8',3)});
  NPCS.forEach(function(n){if(n.map===S.map){var p=npcPos(n);dot(p.x,p.y,n.hub?'#7de3ff':'#ffd24d',2)}});
  mons.forEach(function(m){if(m.boss&&m.st!=='dead')dot(m.x,m.y,'#ff4d4d',3)});dot(P.x,P.y,'#fff',2.5);ctx.restore()}
-function loop(ts){requestAnimationFrame(loop);if(!running)return;if(menuOpen||dlgOpen||mapOpen){last=ts;acc=0;return}var dt=(ts-last)/1000;last=ts;if(dt>.25)dt=.25;acc+=dt;var n=0;
+function loop(ts){requestAnimationFrame(loop);if(!running)return;if(dlgOpen||mapOpen){last=ts;acc=0;return}var dt=(ts-last)/1000;last=ts;if(dt>.25)dt=.25;acc+=dt;var n=0;
  while(acc>=STEP&&n<3){update(STEP);acc-=STEP;n++}
  if(n){render();hudT+=n*STEP;if(hudT>.15){hudT=0;updateHud()}}}
 document.addEventListener('visibilitychange',function(){if(document.hidden){if(S)save()}else{last=performance.now();acc=0}});
