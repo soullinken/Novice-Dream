@@ -314,7 +314,16 @@ LINES.forEach(function(L){SKL[L]=[];[1,2,3].forEach(function(t){KORD[t].forEach(
  else if(k==='b'){var b=BT[t];o.kind='buff';o.t='buff';o.base=b.base;o.cost=b.cost;o.cd=b.cd;o.dur=b.dur;o.eff=EFF[L].b}
  else{o.kind='pas';o.t='pas';o.per=PT[t];o.eff=EFF[L].p}
  if(o.id==='archer.3.p'){o.eff=['range'];o.per=4}SKL[L].push(o);SKI[o.id]=o})})});
-(function(){var o=SKI['warrior.1.p'];o.eff=['hpmax'];o=SKI['warrior.3.p'];o.eff=[];o.auto=1;o=SKI['archer.2.p'];o.eff=['crit'];o=SKI['mage.2.p'];o.eff=['cdr'];o=SKI['mage.3.p'];o.eff=[];o.dd=1;o=SKI['acolyte.3.p'];o.eff=[];o.res=1;o=SKI['acolyte.1.a2'];o.kind='heal';o.t='heal';o.m=0;o.r=0;o.cost=14;o.cd=8;o.heal=25;o=SKI['acolyte.2.a2'];o.kind='heal';o.t='heal';o.m=0;o.r=0;o.cost=24;o.cd=10;o.heal=40;o.hs=4})();var ITEMS={shard:{n:'Serpihan Mimpi',s:4},crystal:{n:'Kristal Kabut',s:10},dust:{n:'Debu Bintang',s:25},feather:{n:'Bulu Awan',s:45},ember:{n:'Bara Kelam',s:80},sand:{n:'Pasir Waktu',s:120},mirror:{n:'Serpihan Cermin',s:170},magma:{n:'Batu Magma',s:240},cog:{n:'Roda Gigi Terbalik',s:330},void:{n:'Inti Hampa',s:450}};
+(function(){var o=SKI['warrior.1.p'];o.eff=['hpmax'];o=SKI['warrior.3.p'];o.eff=[];o.auto=1;o=SKI['archer.2.p'];o.eff=['crit'];o=SKI['mage.2.p'];o.eff=['cdr'];o=SKI['mage.3.p'];o.eff=[];o.dd=1;o=SKI['acolyte.3.p'];o.eff=[];o.res=1;o=SKI['acolyte.1.a2'];o.kind='heal';o.t='heal';o.m=0;o.r=0;o.cost=14;o.cd=8;o.heal=25;o=SKI['acolyte.2.a2'];o.kind='heal';o.t='heal';o.m=0;o.r=0;o.cost=24;o.cd=10;o.heal=40;o.hs=4})();
+/* v9: buff khusus per job tier 2 & 3 */
+(function(){var o=SKI['warrior.2.b'];o.eff=['hpmax','hpreg'];o.sp='hp';
+ o=SKI['warrior.3.b'];o.eff=[];o.sp='inv';o.dur=5;o.cd=60;o.fix=1;
+ o=SKI['archer.2.b'];o.eff=['dodge'];o.sp='dodge';
+ o=SKI['archer.3.b'];o.eff=['critdmg'];o.sp='critdmg';
+ o=SKI['mage.2.b'];o.eff=[];o.sp='wiz';
+ o=SKI['mage.3.b'];o.eff=[];o.sp='refl';o.dur=5;o.cd=30;o.fix=1;
+ o=SKI['acolyte.2.b'];o.eff=['mspd','aspd'];o.sp='spd';
+ o=SKI['acolyte.3.b'];o.eff=[];o.sp='life'})();var ITEMS={shard:{n:'Serpihan Mimpi',s:4},crystal:{n:'Kristal Kabut',s:10},dust:{n:'Debu Bintang',s:25},feather:{n:'Bulu Awan',s:45},ember:{n:'Bara Kelam',s:80},sand:{n:'Pasir Waktu',s:120},mirror:{n:'Serpihan Cermin',s:170},magma:{n:'Batu Magma',s:240},cog:{n:'Roda Gigi Terbalik',s:330},void:{n:'Inti Hampa',s:450}};
 var MAPITEM=['shard','crystal','dust','feather','ember','sand','mirror','magma','cog','void'],MAXSTACK=999;
 var QUESTS=[];(function(){for(var i=0;i<50;i++){var big=i>=25?(i-24)*(i-24)*20:0;QUESTS.push({t:'Perburuan Mimpi '+(i+1),lv:Math.min(99,1+i*2),n:5+i*2,g:30+i*20,x:50+i*35+big})}})();
 /* v8: Potion seragam S/M/H. HP = isi HP, MP = isi MP, Elixir = isi HP+MP sekaligus. Semua punya cooldown (cd, detik) per kategori, berlaku di semua mode (manual, auto battle, auto quest). */
@@ -493,13 +502,30 @@ function spTotal(lv){return Math.floor((lv-1)*16/11)}
 function spGain(lv){return spTotal(lv)-spTotal(lv-1)}
 function pct(stat){var p=0,b=0,ch=chainAll(S.job);for(var i=0;i<ch.length;i++){var k=ch[i];if(!k.eff||S.lv<k.lv||k.eff.indexOf(stat)<0)continue;
  if(k.t==='pas')p+=k.per*rank(k.id);else if(P.buffs[k.id]>0)b=Math.max(b,k.base+2*rank(k.id))}return p+b}
+function wizCh(rk){return 15+2*rk}
+function lifePct(rk){return 1.5+.1*rk}
+function bOn(id){return P.buffs[id]>0&&ownsSk(SKI[id])}
+function pSpd(){return 92*(1+pct('mspd')/100)}
+function wizMp(){return bOn('mage.2.b')?Math.min(80,SKI['mage.2.b'].base+2*rank('mage.2.b')):0}
+function mpCost(d){return d.t==='buff'||!wizMp()?d.cost:Math.max(1,Math.round(d.cost*(1-wizMp()/100)))}
+function wizReset(d){if(!bOn('mage.2.b')||d.id==='mage.2.b')return;if(Math.random()*100>=wizCh(rank('mage.2.b')))return;var c=[];for(var k in P.cds)if(P.cds[k]>0&&k!==d.id&&k!=='mage.2.b')c.push(k);if(!c.length)return;var r=c[Math.floor(Math.random()*c.length)];P.cds[r]=0;log('Mana Tide: cooldown '+SKI[r].n+' direset!');ftxt(P.x,P.y-60,'RESET','#9fd8ff')}
+function lifeHeal(){if(!bOn('acolyte.3.b')||S.hp>=maxHp())return;var h=Math.max(1,Math.floor(maxHp()*lifePct(rank('acolyte.3.b'))/100));S.hp=Math.min(maxHp(),S.hp+h);ftxt(P.x,P.y-50,'+'+h,'#8be0a4')}
 function anyBuff(){for(var k in P.buffs)if(P.buffs[k]>0)return true;return false}
 function fmt(n){return Math.round(n*10)/10}
 function skDesc(k,rk){var L=k.line,m=k.m?Math.round(k.m*(1+rk*.1)*100):0;
  if(k.t==='dmg')return 'Serang 1 musuh: '+m+'% ATK';
  if(k.t==='aoe')return 'Serang semua musuh radius '+k.r+': '+m+'% ATK';
  if(k.t==='heal')return 'Pulihkan '+fmt(k.heal+(k.hs||3)*rk)+'% max HP';
- if(k.t==='buff'){var v=fmt(k.base+2*rk),e=L==='warrior'?'DEF +'+v+'%':L==='archer'?'Akurasi +'+v+'% (lebih dari 100% jadi peluang crit)':L==='mage'?'Max MP & regen MP +'+v+'%':'Max HP & regen HP +'+v+'%';return e+' selama '+(k.dur+rk)+' dtk'}
+ if(k.t==='buff'){var v=fmt(k.base+2*rk),sp=k.sp,du=' selama '+(k.fix?k.dur:k.dur+rk)+' dtk';
+ if(sp==='hp')return 'Max HP & regen HP +'+v+'%'+du;
+ if(sp==='inv')return 'Tidak bisa mati (HP minimal 1)'+du;
+ if(sp==='dodge')return 'Dodge +'+v+'% (serangan musuh bisa dihindari)'+du;
+ if(sp==='critdmg')return 'Critical damage +'+v+'%'+du;
+ if(sp==='wiz')return 'Tiap skill berpeluang '+wizCh(rk)+'% mereset 1 skill yang sedang cooldown & biaya MP skill -'+v+'%'+du;
+ if(sp==='refl')return 'Pantulkan 25% damage yang diterima ke penyerang'+du;
+ if(sp==='spd')return 'Kecepatan gerak +'+v+'% & kecepatan serang +'+v+'%'+du;
+ if(sp==='life')return 'Tiap serangan memulihkan '+fmt(lifePct(rk))+'% max HP'+du;
+ var e=L==='warrior'?'DEF +'+v+'%':L==='archer'?'Akurasi +'+v+'% (lebih dari 100% jadi peluang crit)':L==='mage'?'Max MP & regen MP +'+v+'%':'Max HP & regen HP +'+v+'%';return e+' selama '+(k.dur+rk)+' dtk'}
  if(k.res)return 'Saat HP habis, hidup kembali di tempat yang sama dengan 50% max HP (tidak kembali ke titik tengah). Cooldown 10 menit (tetap berjalan walau game ditutup)'+(resLeft()>0?' · Sisa CD: '+fmtMS(resLeft()):' · Siap');
  if(k.dd)return 'Setiap skill serangan berpeluang '+fmt(3+.5*Math.max(rk,1))+'% menghasilkan double damage (2x). Jika terpicu, pasif ini cooldown 10 dtk';
  if(k.auto)return 'Semi-aktif: otomatis menyala saat HP ≤40% (CD 120 dtk). Pulihkan '+fmt(10+.5*(Math.max(rk,1)-1))+'% max HP tiap 2 dtk selama 10 dtk';var q=fmt(k.per*rk),e=k.eff.length>1?'vit':k.eff[0],tn={def:'DEF',aspd:'Kecepatan serang',atk:'ATK',hpmax:'Max HP',range:'Jangkauan serang',crit:'Peluang critical',cdr:'Pengurangan cooldown skill',vit:'Max & regen HP/MP'};return (tn[e]||e)+' +'+q+'% (permanen)'}
@@ -730,12 +756,12 @@ function gainXp(n){if(S.lv>=LVMAX)return;S.xp+=n;while(S.lv<LVMAX&&S.xp>=xpNeed(
 function setAtk(){P.st='attack';P.stT=.35}
 function strike(m,a,k,mult,col,dd){var hc=90+pct('acc')-Math.max(0,m.lv-S.lv)*2;
  if(Math.random()*100>hc){ftxt(m.x,m.y-34,'Miss','#bde');m.aggro=true;P.combat=4;return false}
- var d=calc(a,m.lv*k,mult);if(dd===2){d*=2;col='#d98cff'}else if(dd===1&&Math.random()*100<Math.min(100,Math.max(0,hc-100)+pct('crit')+petCrit())){d*=2;col='#ffe14d'}
+ var d=calc(a,m.lv*k,mult);if(dd===2){d*=2;col='#d98cff'}else if(dd===1&&Math.random()*100<Math.min(100,Math.max(0,hc-100)+pct('crit')+petCrit())){d*=2*(1+(bOn('archer.3.b')?pct('critdmg'):0)/100);d=Math.floor(d);col='#ffe14d'}
  hitMon(m,d,col);return true}
 function playerAttack(){
  if(P.atkCd>0)return false;var m=pickT(reach());if(!m){return false}
  P.rest=false;P.dir=m.x>=P.x?1:-1;P.atkCd=.55/(1+pct('aspd')/100);setAtk();
- if(reach()>60)shot(P,m,JOBS[S.job].col);strike(m,atkRoll(),1.6,1,undefined,1);SFX.atk(JOBS[S.job].line,0);return true}
+ if(reach()>60)shot(P,m,JOBS[S.job].col);strike(m,atkRoll(),1.6,1,undefined,1);lifeHeal();SFX.atk(JOBS[S.job].line,0);return true}
 function witchProc(){var w=SKI['mage.3.p'];if(!w||!ownsSk(w)||S.lv<w.lv||rank(w.id)<1||(P.wdCd||0)>0)return false;return Math.random()*100<3+.5*rank(w.id)}
 function pickT(r){var t=P.tgt;if((S.auto||S.aq)&&t&&t.st!=='dead'&&!offLimit(t)&&dist(P,t)<=r)return t;return nearest(r)}
 function castSkill(i,quiet){var id=S.slots[i];return id&&SKI[id]?castSk(SKI[id],quiet):false}
@@ -747,19 +773,21 @@ function castSk0(d,quiet){
  if(!d||!ownsSk(d))return false;
  if(S.lv<d.lv){if(!quiet)log(d.n+' terbuka di Lv '+d.lv+'.');return false}
  if(rank(d.id)<1){if(!quiet)log(d.n+' belum diambil. Ambil dulu di Menu › Karakter › Skill.');return false}
- if(P.cds[d.id]>0)return false;if(S.mp<d.cost){if(!quiet)log('MP tidak cukup untuk '+d.n+'.');return false}
+ if(P.cds[d.id]>0)return false;var mc=mpCost(d);if(S.mp<mc){if(!quiet)log('MP tidak cukup untuk '+d.n+'.');return false}
  var rk=rank(d.id),mult=(d.m||1)*(1+rk*.1),tg=pickT(reach()+40);
  if(d.t!=='buff'&&d.t!=='heal'&&!tg){if(!quiet)log('Tidak ada target dalam jangkauan.');return false}
  if(d.t==='buff'&&quiet&&P.buffs[d.id]>0)return false;
  if(d.t==='heal'){if(S.hp>=maxHp()){if(!quiet)log('HP sudah penuh.');return false}if(quiet&&S.hp>maxHp()*.8)return false}
  var wd=0;if((d.t==='dmg'||d.t==='aoe')&&witchProc()){wd=2;P.wdCd=10;log('Hex Mastery: Double Damage!')}
- S.mp-=d.cost;P.cds[d.id]=d.cd*(1-Math.min(50,pct('cdr'))/100);P.rest=false;setAtk();
+ S.mp-=mc;P.cds[d.id]=d.cd*(1-Math.min(50,pct('cdr'))/100);P.rest=false;setAtk();
  if(tg)P.dir=tg.x>=P.x?1:-1;
  if(d.t==='dmg'||d.t==='aoe')SFX.atk(JOBS[S.job].line,d.t==='aoe'?2:1);
  if(d.t==='dmg'){if(reach()>60)shot(P,tg,'#ffb060');strike(tg,atkRoll(),1.2,mult,'#ffb060',wd)}
  else if(d.t==='aoe'){ring(tg.x,tg.y-8,d.r,'#7fd0ff');for(var k=0;k<mons.length;k++){var m=mons[k];if(m.st!=='dead'&&dist(tg,m)<=d.r)strike(m,atkRoll(),1.2,mult,'#7fd0ff',wd)}}
  else if(d.t==='heal'){var hl=Math.floor(maxHp()*(d.heal+(d.hs||3)*rk)/100);S.hp=Math.min(maxHp(),S.hp+hl);ftxt(P.x,P.y-50,'+'+hl,'#8be0a4');ring(P.x,P.y-10,30,'#8be0a4')}
- else if(d.t==='buff'){P.buffs[d.id]=d.dur+rk;log(d.n+' aktif: '+skDesc(d,rk)+'.');ring(P.x,P.y-10,34,'#ffe08a')}
+ else if(d.t==='buff'){P.buffs[d.id]=d.fix?d.dur:d.dur+rk;log(d.n+' aktif: '+skDesc(d,rk)+'.');ring(P.x,P.y-10,34,'#ffe08a')}
+ if(d.t==='dmg'||d.t==='aoe')lifeHeal();
+ wizReset(d);
  return true}function usePot(key,quiet){var p=POT[key];if(!p||!(S.inv[key]>0))return false;
  if(P.pcd[p.cat]>0){if(!quiet)log('Potion masih cooldown: '+Math.ceil(P.pcd[p.cat])+' dtk.');return false}
  var nh=p.hp&&S.hp<maxHp(),nm=p.mp&&S.mp<maxMp();
@@ -797,10 +825,10 @@ function update(dt){portalStep(dt);
  for(var ck in P.cds)if(P.cds[ck]>0)P.cds[ck]-=dt;if((P.wdCd||0)>0)P.wdCd-=dt;S.playT=(S.playT||0)+dt;
  for(var bk in P.buffs)if(P.buffs[bk]>0)P.buffs[bk]-=dt;
  var mx=keys.right-keys.left,my=keys.down-keys.up,moving=false;
- if(mx||my){camFree=null;P.tx=null;P.talkTo=null;P.rest=false;P.manual=1.2;var l=Math.sqrt(mx*mx+my*my);P.x+=mx/l*92*dt;P.y+=my/l*92*dt;if(mx)P.dir=mx>0?1:-1;moving=true}
+ if(mx||my){camFree=null;P.tx=null;P.talkTo=null;P.rest=false;P.manual=1.2;var l=Math.sqrt(mx*mx+my*my);P.x+=mx/l*pSpd()*dt;P.y+=my/l*pSpd()*dt;if(mx)P.dir=mx>0?1:-1;moving=true}
  else if(S.aq&&P.manual<=0&&!P.rest&&P.tx===null){moving=aqStep(dt)}
  else if(S.auto&&P.manual<=0&&!P.rest){moving=autoStep(dt)}
- else if(P.tx!==null){P.rest=false;if(OBS.length){var tq={x:P.tx,y:P.ty};if(obsPush(tq,OPAD+3)){P.tx=tq.x;P.ty=tq.y}}if(moveToward(P,P.tx,P.ty,92,dt))P.tx=null;moving=true}
+ else if(P.tx!==null){P.rest=false;if(OBS.length){var tq={x:P.tx,y:P.ty};if(obsPush(tq,OPAD+3)){P.tx=tq.x;P.ty=tq.y}}if(moveToward(P,P.tx,P.ty,pSpd(),dt))P.tx=null;moving=true}
  if(!S.auto&&!S.aq)P.tgt=null;
  var am=S.aq?'Auto Quest':S.auto?'Auto Battle':'';if(am!==aMode){if(am)dlog(am+' ON · Lv '+S.lv+' · '+MAPS[S.map].n+' · HP '+Math.floor(S.hp)+'/'+maxHp()+' · MP '+Math.floor(S.mp)+'/'+maxMp()+' · Health Potion '+potN(POT_HP)+' · Elixir '+potN(POT_EL));else dlog(aMode+' OFF');aMode=am;aTgK='';aNone=false}
  var ph=potHas(POT_HP)||potHas(POT_EL);if(aPotHas&&!ph&&am)dlog('Health Potion & Elixir habis');aPotHas=ph;
@@ -835,7 +863,7 @@ function autoStep(dt,aqm,q){
  if(!m){if(!aNone){aNone=true;aTgK='';dlog('Tidak ada target')}return false}
  aNone=false;var tk=m.slot+':'+m.name+':'+m.lv;if(tk!==aTgK){aTgK=tk;dlog('Target: '+m.name+' Lv '+m.lv+(m.wb?' [World Boss]':m.boss?' [Boss]':'')+' · jarak '+Math.round(dist(P,m)))}
  var d=dist(P,m),r=reach();
- if(d>r*.85){P.rest=false;moveToward(P,m.x,m.y,92,dt);return true}
+ if(d>r*.85){P.rest=false;moveToward(P,m.x,m.y,pSpd(),dt);return true}
  P.dir=m.x>=P.x?1:-1;
  if(S.autoSk){for(var i=NSLOT-1;i>=0;i--){if(castSkill(i,true))return false}}
  playerAttack();return false}
@@ -849,7 +877,7 @@ function monStep(m,dt){
  if(m.aggro||(m.ag&&d<AR)){m.aggro=true;if(d>AR*2.2){m.aggro=false}
   if(d>RG){if(m.st!=='attack'&&m.st!=='hurt'){m.st='walk';mmove(m,P.x,P.y,m.boss?sp:sp*(1+Math.min(.5,m.lv/200)),dt)}}
   else if(m.cd<=0){m.cd=m.wb?1.2:m.boss?1.3:Math.max(.9,1.4-m.lv/250);m.st='attack';m.dir=P.x>=m.x?1:-1;
-   var dm=Math.max(1,Math.floor(m.atk*rnd(.85,1.15)*100/(100+def()*1.2)));S.hp-=dm;P.lastHit=m.name+' Lv '+m.lv+(m.wb?' [World Boss]':m.boss?' [Boss]':'');P.hurt=.2;P.rest=false;P.combat=4;ftxt(P.x,P.y-40,'-'+dm,'#ff8a8a')}}
+   var dm=Math.max(1,Math.floor(m.atk*rnd(.85,1.15)*100/(100+def()*1.2)));if(pct('dodge')>0&&Math.random()*100<Math.min(75,pct('dodge'))){ftxt(P.x,P.y-40,'Dodge','#bde');P.combat=4;P.rest=false;dm=0}else{S.hp-=dm;if(bOn('warrior.3.b')&&S.hp<1)S.hp=1}P.lastHit=m.name+' Lv '+m.lv+(m.wb?' [World Boss]':m.boss?' [Boss]':'');if(dm>0){P.hurt=.2;P.rest=false;P.combat=4;ftxt(P.x,P.y-40,'-'+dm,'#ff8a8a');if(bOn('mage.3.b'))hitMon(m,Math.max(1,Math.round(dm*.25)),'#d98cff')}}}
  else{m.wt-=dt;if(m.wt<=0){m.wt=rnd(1.5,3.5);for(var q=0;q<10;q++){m.tx=m.hx+rnd(-40,40);m.ty=m.hy+rnd(-30,30);if(!inSafe(m.tx,m.ty,6)&&!obsAt(m.tx,m.ty,OPAD+6))break}if(inSafe(m.tx,m.ty,6)||obsAt(m.tx,m.ty,OPAD+6)){m.tx=m.hx;m.ty=m.hy}}
   if(dist(m,{x:m.tx,y:m.ty})>3){m.st='walk';mmove(m,m.tx,m.ty,sp*.5,dt)}else if(m.st==='walk')m.st='idle'}}
 
@@ -988,7 +1016,7 @@ function aqStep(dt){
  if(toNpc){var npc=npcByName(q.npc);
   if(S.map!==npc.map){if(aqT<=0){dlog('Auto Quest: pindah ke '+MAPS[npc.map].n);setMap(npc.map);aqT=1.5}return false}
   var np=npcPos(npc);if(dist(P,np)<30){talkNPC(npc,true);return false}
-  moveToward(P,np.x,np.y,92,dt);return true}
+  moveToward(P,np.x,np.y,pSpd(),dt);return true}
  if(S.map!==q.map){if(aqT<=0){dlog('Auto Quest: pindah ke '+MAPS[q.map].n);setMap(q.map);aqT=1.5}return false}
  return autoStep(dt,true,q)}
 function goQuest(){var q=curMQ();if(!q)return;var toNpc=q.type==='talk'||S.mq.ph===1,n=toNpc?npcByName(q.npc):null,mp=toNpc?n.map:q.map;
