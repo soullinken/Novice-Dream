@@ -1177,11 +1177,11 @@ function act(a,v){if(hubAct(a,v))return;if(S.lv<5&&['buy','buy10','buyg','sell',
  else if(a==='tMus'){S.mus=S.mus===false;musApply()}else if(a==='tSfx'){S.sfx=S.sfx===false}else if(a==='tAutoSk'){S.autoSk=!S.autoSk}else if(a==='tAutoPot'){S.autoPot=!S.autoPot}
  else if(a==='full'){toggleFull()}
  else if(a==='save'){save();log('Game disimpan.')}
- else if(a==='backup'){$('bk').value=JSON.stringify(S);$('bk').select();log('Kode backup dibuat. Salin dan simpan di tempat aman.')}
+ else if(a==='backup'){window.__bkCode=JSON.stringify(S);log('Kode backup dibuat. Salin dan simpan di tempat aman.')}
  else if(a==='restore'){var d=loadRaw($('bk').value);if(d){S=d;nmSync();fixBag();setMap(S.map);log('Backup dipulihkan.');save()}else log('Kode backup tidak valid.')}
  else if(a==='switch'){if(confirm('Simpan dan kembali ke pilihan karakter?')){save();location.reload()}}
  else if(a==='reset'){if(confirm('Hapus karakter di slot ini? Tidak bisa dibatalkan.')){try{localStorage.removeItem(SAVE_KEY)}catch(e){}location.reload()}}
- renderTab();updateHud()}
+ renderTab();updateHud();if(a==='backup'&&window.__bkCode){var bt=$('bk');if(bt){bt.value=window.__bkCode;try{bt.focus();bt.select()}catch(e){}}}}
 
 
 /* ---------- LAYOUT LANDSCAPE ---------- */
