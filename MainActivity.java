@@ -12,8 +12,13 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 public class MainActivity extends Activity {
-    private static final String ONLINE_URL = "https://soullinken.github.io/Novice-Dream/";
-    private static final String OFFLINE_URL = "file:///android_asset/index.html";
+
+    private static final String ONLINE_URL =
+        "https://soullinken.github.io/Novice-Dream/";
+
+    private static final String OFFLINE_URL =
+        "file:///android_asset/index.html";
+
     private WebView webView;
     private boolean usingOffline = false;
 
@@ -25,16 +30,6 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         webView.setBackgroundColor(0xFF000000);
         webView.setOverScrollMode(View.OVER_SCROLL_NEVER);
-        webView.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                if (request.isForMainFrame() && !usingOffline) {
-                    usingOffline = true;
-                    view.loadUrl(OFFLINE_URL);
-                }
-            }
-        });
-        webView.setWebChromeClient(new WebChromeClient());
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -42,14 +37,37 @@ public class MainActivity extends Activity {
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(true);
         settings.setAllowContentAccess(true);
-        settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+
+        // Hindari penggunaan cache lama untuk halaman online.
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        webView.clearCache(true);
+
         settings.setMediaPlaybackRequiresUserGesture(false);
         settings.setSupportZoom(false);
         settings.setBuiltInZoomControls(false);
         settings.setDisplayZoomControls(false);
 
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onReceivedError(
+                WebView view,
+                WebResourceRequest request,
+                WebResourceError error
+            ) {
+                if (request.isForMainFrame() && !usingOffline) {
+                    usingOffline = true;
+                    view.loadUrl(OFFLINE_URL);
+                }
+            }
+        });
+
+        webView.setWebChromeClient(new WebChromeClient());
         setContentView(webView);
-        webView.loadUrl(ONLINE_URL);
+
+        // Parameter unik membantu menghindari cache halaman utama.
+        webView.loadUrl(
+            ONLINE_URL + "?update=" + System.currentTimeMillis()
+        );
     }
 
     private void hideSystemBars() {
@@ -66,16 +84,26 @@ public class MainActivity extends Activity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) hideSystemBars();
+        if (hasFocus) {
+            hideSystemBars();
+        }
     }
 
     @Override
     public void onBackPressed() {
         new AlertDialog.Builder(this)
             .setTitle("Keluar dari Novice Dream?")
-            .setMessage("Progres yang sudah tersimpan tetap ada di perangkat.")
-            .setNegativeButton("Lanjut bermain", (dialog, which) -> dialog.dismiss())
-            .setPositiveButton("Keluar", (dialog, which) -> finish())
+            .setMessage(
+                "Progres yang sudah tersimpan tetap ada di perangkat."
+            )
+            .setNegativeButton(
+                "Lanjut bermain",
+                (dialog, which) -> dialog.dismiss()
+            )
+            .setPositiveButton(
+                "Keluar",
+                (dialog, which) -> finish()
+            )
             .show();
     }
 
